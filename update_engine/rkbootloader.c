@@ -362,8 +362,9 @@ int setSlotSucceed()
     }
     if (avb_safe_memcmp(info.magic, AVB_AB_MAGIC, AVB_AB_MAGIC_LEN) != 0) {
         LOGE("Magic is incorrect.\n");
-        return false;
+        return -1;
     }
+    const struct AvbABData original = info;
     if (info.slots[now_slot].priority != AVB_AB_MAX_PRIORITY) {
         /* Something could be wrong, correct it because this slot is bootable */
         LOGW("Warning: current slot priorty is %d != %d, Correct it!\n",
@@ -386,6 +387,9 @@ int setSlotSucceed()
     info.last_boot = now_slot;
 
     AvbABData_update_crc(&info);
+    if (memcmp(&info, &original, sizeof(info)) == 0) {
+        return 0;
+    }
 
     if (writeABMisc(&info) != 0) {
         return -1;
